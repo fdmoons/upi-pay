@@ -14,102 +14,58 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    background:radial-gradient(circle at top,#0f2027,#0a1a2a,#000);
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
     font-family:'Poppins',sans-serif;
     color:#fff;
-    overflow:hidden;
 }
-body::before{
-    content:'';
-    position:absolute;
-    width:420px;
-    height:420px;
-    background:radial-gradient(circle,#00f260,transparent 60%);
-    filter:blur(120px);
-    animation:float 7s infinite alternate;
-}
-@keyframes float{
-    from{transform:translate(-120px,-120px)}
-    to{transform:translate(140px,140px)}
-}
-
 .card{
     width:360px;
-    padding:30px;
-    border-radius:26px;
-    background:rgba(255,255,255,0.10);
-    backdrop-filter:blur(20px);
-    box-shadow:0 30px 70px rgba(0,0,0,.6);
+    padding:28px;
+    border-radius:22px;
+    background:rgba(255,255,255,.12);
+    backdrop-filter:blur(18px);
+    box-shadow:0 25px 50px rgba(0,0,0,.5);
     text-align:center;
-    animation:pop .8s ease;
-    z-index:2;
 }
-@keyframes pop{
-    from{opacity:0;transform:scale(.9)}
-    to{opacity:1;transform:scale(1)}
-}
-
-h3{margin-bottom:10px}
-
 #qrcode{
     background:#fff;
-    padding:16px;
-    border-radius:20px;
-    margin:18px auto;
-    animation:pulse 2.2s infinite;
+    padding:14px;
+    border-radius:18px;
+    margin:15px auto;
 }
-@keyframes pulse{
-    0%{box-shadow:0 0 0 rgba(0,242,96,0)}
-    50%{box-shadow:0 0 30px rgba(0,242,96,.7)}
-    100%{box-shadow:0 0 0 rgba(0,242,96,0)}
-}
-
 input,button{
     width:100%;
-    padding:13px;
-    border-radius:14px;
+    padding:12px;
+    border-radius:12px;
     border:none;
-    margin-top:12px;
+    margin-top:10px;
     font-size:15px;
 }
-input{outline:none}
-
 button{
     background:linear-gradient(135deg,#00f260,#0575e6);
     color:#fff;
     cursor:pointer;
-    transition:.3s;
 }
-button:hover{
-    transform:scale(1.05);
-    box-shadow:0 12px 30px rgba(0,0,0,.4);
-}
-
-/* Admin */
 .admin-dot{
     position:fixed;
-    bottom:18px;
-    right:18px;
+    bottom:15px;
+    right:15px;
     width:14px;
     height:14px;
     background:#00f260;
     border-radius:50%;
-    box-shadow:0 0 15px #00f260;
     cursor:pointer;
-    z-index:5;
-}
-.admin-box{
-    position:fixed;
-    bottom:48px;
-    right:18px;
-    background:#0b0b0b;
-    padding:16px;
-    border-radius:14px;
-    width:260px;
-    box-shadow:0 20px 50px rgba(0,0,0,.6);
-    z-index:5;
 }
 .hidden{display:none}
+.admin-box{
+    position:fixed;
+    bottom:40px;
+    right:15px;
+    background:#111;
+    padding:15px;
+    border-radius:12px;
+    width:260px;
+}
 </style>
 </head>
 
@@ -124,10 +80,10 @@ button:hover{
     <button onclick="pay()">Pay Now</button>
 </div>
 
-<!-- Admin Dot -->
-<div class="admin-dot"></div>
+<!-- ADMIN DOT -->
+<div class="admin-dot" onclick="toggleAdmin()"></div>
 
-<!-- Admin Panel -->
+<!-- ADMIN PANEL -->
 <div class="admin-box hidden" id="adminBox">
     <input type="password" id="adminPass" placeholder="Admin Password">
     <button onclick="adminLogin()">Login</button>
@@ -140,14 +96,12 @@ button:hover{
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
 /* ================= CONFIG ================= */
 let UPI_ID = "shop.mitra@ybl";
 let DEFAULT_AMOUNT = "";
 
-/* SHA-256 hash of password: Dheeraj@8085 */
-const ADMIN_HASH = "5f1b9e4b9b92e2a8c7a7f9f4bcb2a7e56f6e7e64b9a3bb4b7a0c9c2b4f7f0d9a";
+const ADMIN_HASH = "2e6619692788d8d23acf5127e265f477cbc1217255f9b54a93eb5de232d1723f";
 
 let attempts = 0;
 let lockedUntil = 0;
@@ -170,7 +124,7 @@ function pay(){
     window.location.href = link;
 }
 
-/* ================= ADMIN LONG PRESS ================= */
+/* ================= ADMIN OPEN (LONG PRESS) ================= */
 let pressTimer;
 const adminDot = document.querySelector(".admin-dot");
 
@@ -182,9 +136,11 @@ adminDot.addEventListener("mouseup", cancelPress);
 function startPress(){
     pressTimer = setTimeout(()=>{
         document.getElementById("adminBox").classList.remove("hidden");
-    },3000);
+    },3000); // 3 sec long press
 }
-function cancelPress(){ clearTimeout(pressTimer); }
+function cancelPress(){
+    clearTimeout(pressTimer);
+}
 
 /* ================= HASH ================= */
 async function sha256(msg){
@@ -210,8 +166,9 @@ async function adminLogin(){
     }else{
         attempts++;
         alert("Wrong password");
+
         if(attempts >= 3){
-            lockedUntil = now + 5*60*1000;
+            lockedUntil = now + (5 * 60 * 1000); // 5 min lock
             alert("Too many attempts. Locked for 5 minutes.");
         }
     }
@@ -223,7 +180,7 @@ function saveAdmin(){
     const a = document.getElementById("adminAmt").value;
 
     if(u && !u.includes("@")){
-        alert("Invalid UPI ID");
+        alert("Invalid UPI");
         return;
     }
 
@@ -231,7 +188,7 @@ function saveAdmin(){
     DEFAULT_AMOUNT = a;
 
     makeQR(DEFAULT_AMOUNT);
-    alert("Updated successfully");
+    alert("Updated securely");
 }
 </script>
 
